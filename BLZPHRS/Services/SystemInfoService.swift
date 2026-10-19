@@ -7,23 +7,45 @@
 
 import Foundation
 import Darwin
+import os
 
 final class SystemInfoService: @unchecked Sendable {
+    private struct AppMetadata: Sendable {
+        let name: String
+        let bundleIdentifier: String?
+    }
+
+    private nonisolated let appMetadataCache = OSAllocatedUnfairLock(initialState: [String: AppMetadata]())
+
     nonisolated init() {}
 
-    nonisolated func diskStats() throws -> DiskStats {
-        let url = URL(fileURLWithPath: NSHomeDirectory())
-        let values = try url.resourceValues(forKeys: [
+    /// `includePurgeable` reads the expensive important-usage key. Background refresh leaves it off,
+    /// so a missing key cannot drop the disk sample.
+    nonisolated func diskStats(includePurgeable: Bool = false) throws -> DiskStats {
+        var keys: Set<URLResourceKey> = [
             .volumeTotalCapacityKey,
-            .volumeAvailableCapacityForImportantUsageKey
-        ])
+            .volumeAvailableCapacityKey
+        ]
+        if includePurgeable {
+            keys.insert(.volumeAvailableCapacityForImportantUsageKey)
+        }
 
+        let url = URL(fileURLWithPath: NSHomeDirectory())
+        let values = try url.resourceValues(forKeys: keys)
         guard let total = values.volumeTotalCapacity,
-              let free = values.volumeAvailableCapacityForImportantUsage else {
+              let available = values.volumeAvailableCapacity else {
             throw SystemInfoError.diskSpaceUnavailable
         }
 
-        return DiskStats(total: Int64(total), free: Int64(free))
+        let free = Int64(available)
+        // Capacity In Use keeps purgeable snapshots and caches in "used".
+        let purgeable: Int64?
+        if includePurgeable, let important = values.volumeAvailableCapacityForImportantUsage {
+            purgeable = max(important - free, 0)
+        } else {
+            purgeable = nil
+        }
+        return DiskStats(total: Int64(total), free: free, purgeable: purgeable)
     }
 
     nonisolated func memoryStats() throws -> MemoryStats {
@@ -43,29 +65,105 @@ final class SystemInfoService: @unchecked Sendable {
         var pageSize: vm_size_t = 0
         host_page_size(mach_host_self(), &pageSize)
         let pageSizeInt64 = Int64(pageSize)
-
         let totalMemory = Int64(ProcessInfo.processInfo.physicalMemory)
-        let freeMemory = Int64(stats.free_count) * pageSizeInt64
         let wiredMemory = Int64(stats.wire_count) * pageSizeInt64
         let activeMemory = Int64(stats.active_count) * pageSizeInt64
         let inactiveMemory = Int64(stats.inactive_count) * pageSizeInt64
         let compressedMemory = Int64(stats.compressor_page_count) * pageSizeInt64
+        let purgeableMemory = Int64(stats.purgeable_count) * pageSizeInt64
+        let pageableInternal = Self.pageableInternalBytes(pageSize: pageSizeInt64)
+            ?? (Int64(stats.internal_page_count) * pageSizeInt64)
+        let usedMemory = Self.occupiedMemoryBytes(
+            pageableInternal: pageableInternal,
+            purgeable: purgeableMemory,
+            wired: wiredMemory,
+            compressed: compressedMemory,
+            total: totalMemory
+        )
 
-        let availableMemory = min(max(freeMemory + inactiveMemory, 0), totalMemory)
-        let usedMemory = max(totalMemory - availableMemory, 0)
-
+        let swap = Self.swapUsage()
         return MemoryStats(
             total: totalMemory,
             used: usedMemory,
-            free: availableMemory,
+            free: max(totalMemory - usedMemory, 0),
             active: activeMemory,
             inactive: inactiveMemory,
             wired: wiredMemory,
-            compressed: compressedMemory
+            compressed: compressedMemory,
+            swapUsed: swap.used,
+            swapTotal: swap.total
         )
     }
 
-    nonisolated func topProcessGroupsByMemory(limit: Int = 10) throws -> [AppUsageGroup] {
+    /// Activity Monitor's Memory Used: pageable anonymous pages without purgeable data, plus wired and compressor pages.
+    nonisolated static func occupiedMemoryBytes(
+        pageableInternal: Int64,
+        purgeable: Int64,
+        wired: Int64,
+        compressed: Int64,
+        total: Int64
+    ) -> Int64 {
+        let appMemory = max(pageableInternal - purgeable, 0)
+        let used = appMemory + wired + compressed
+        return min(max(used, 0), max(total, 0))
+    }
+
+    private nonisolated static func pageableInternalBytes(pageSize: Int64) -> Int64? {
+        var pages: UInt32 = 0
+        var size = MemoryLayout<UInt32>.size
+        guard sysctlbyname("vm.page_pageable_internal_count", &pages, &size, nil, 0) == 0 else {
+            return nil
+        }
+        return Int64(pages) * pageSize
+    }
+
+    private nonisolated static func swapUsage() -> (used: Int64, total: Int64) {
+        var usage = xsw_usage()
+        var size = MemoryLayout<xsw_usage>.size
+        guard sysctlbyname("vm.swapusage", &usage, &size, nil, 0) == 0 else {
+            return (0, 0)
+        }
+        return (
+            used: Int64(clamping: usage.xsu_used),
+            total: Int64(clamping: usage.xsu_total)
+        )
+    }
+
+    nonisolated func makeSnapshot(
+        includeDetails: Bool,
+        isCancelled: @Sendable () -> Bool = { false }
+    ) -> SystemSample {
+        if isCancelled() { return SystemSample() }
+
+        var sample = SystemSample()
+        do {
+            sample.memory = try memoryStats()
+        } catch {
+            sample.errorMessage = error.localizedDescription
+        }
+        if isCancelled() { return SystemSample() }
+
+        do {
+            sample.disk = try diskStats(includePurgeable: includeDetails)
+        } catch {
+            sample.errorMessage = sample.errorMessage ?? error.localizedDescription
+        }
+        guard includeDetails, !isCancelled() else { return sample }
+
+        do {
+            sample.appGroups = try topProcessGroupsByMemory(limit: 10, isCancelled: isCancelled)
+        } catch is CancellationError {
+            return SystemSample()
+        } catch {
+            sample.errorMessage = sample.errorMessage ?? error.localizedDescription
+        }
+        return sample
+    }
+
+    nonisolated func topProcessGroupsByMemory(
+        limit: Int = 10,
+        isCancelled: @Sendable () -> Bool = { false }
+    ) throws -> [AppUsageGroup] {
         let bufferBytes = proc_listpids(UInt32(PROC_ALL_PIDS), 0, nil, 0)
         guard bufferBytes > 0 else {
             throw SystemInfoError.processListUnavailable
@@ -80,16 +178,32 @@ final class SystemInfoService: @unchecked Sendable {
 
         let pidCount = Int(written) / MemoryLayout<pid_t>.size
         var samples: [ProcessMemoryUsage] = []
-        samples.reserveCapacity(pidCount)
+        samples.reserveCapacity(min(pidCount, 256))
+        var pathBuffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
+        let selfPID = getpid()
 
-        autoreleasepool {
-            for i in 0..<pidCount {
-                let pid = pidBuffer[i]
-                guard pid > 0, pid != getpid(), let sample = Self.processMemoryUsage(pid: pid) else {
-                    continue
-                }
-                samples.append(sample)
+        for index in 0..<pidCount {
+            if isCancelled() { throw CancellationError() }
+            let pid = pidBuffer[index]
+            guard pid > 0, pid != selfPID else { continue }
+            guard let path = Self.processPath(pid: pid, buffer: &pathBuffer),
+                  let appPath = Self.containingAppPath(path),
+                  !appPath.hasPrefix("/System/") else {
+                continue
             }
+            guard let sizes = Self.processSizes(pid: pid) else { continue }
+            let metadata = appMetadata(forAppPath: appPath)
+            guard !metadata.name.isEmpty else { continue }
+            samples.append(
+                ProcessMemoryUsage(
+                    pid: pid,
+                    name: metadata.name,
+                    bundleIdentifier: metadata.bundleIdentifier,
+                    appPath: appPath,
+                    residentBytes: sizes.resident,
+                    physicalFootprintBytes: sizes.footprint
+                )
+            )
         }
 
         let groups = Dictionary(grouping: samples) { process in
@@ -111,73 +225,86 @@ final class SystemInfoService: @unchecked Sendable {
         return Array(groups.prefix(limit))
     }
 
-    private nonisolated static func processMemoryUsage(pid: pid_t) -> ProcessMemoryUsage? {
+    nonisolated static func containingAppPath(_ path: String) -> String? {
+        let marker: Range<String.Index>
+        if let nested = path.range(of: ".app/") {
+            marker = nested
+        } else if path.hasSuffix(".app"), let suffix = path.range(of: ".app", options: .backwards) {
+            marker = suffix
+        } else {
+            return nil
+        }
+        let end = path.index(marker.lowerBound, offsetBy: 4)
+        guard end <= path.endIndex else { return nil }
+        return String(path[..<end])
+    }
+
+    private nonisolated func appMetadata(forAppPath appPath: String) -> AppMetadata {
+        if let cached = appMetadataCache.withLock({ $0[appPath] }) {
+            return cached
+        }
+        let metadata = AppMetadata(
+            name: Self.appDisplayName(appPath: appPath),
+            bundleIdentifier: Bundle(url: URL(fileURLWithPath: appPath))?.bundleIdentifier
+        )
+        appMetadataCache.withLock { $0[appPath] = metadata }
+        return metadata
+    }
+
+    private nonisolated static func appDisplayName(appPath: String) -> String {
+        let component: Substring
+        if let slash = appPath.lastIndex(of: "/") {
+            component = appPath[appPath.index(after: slash)...]
+        } else {
+            component = Substring(appPath)
+        }
+        if component.hasSuffix(".app") {
+            return String(component.dropLast(4))
+        }
+        return String(component)
+    }
+
+    private struct ProcessSizes {
+        let footprint: UInt64
+        let resident: UInt64
+    }
+
+    /// Activity Monitor's per-process Memory column is `ri_phys_footprint`.
+    private nonisolated static func processSizes(pid: pid_t) -> ProcessSizes? {
+        var info = rusage_info_v4()
+        let status = withUnsafeMutablePointer(to: &info) { pointer -> Int32 in
+            pointer.withMemoryRebound(to: rusage_info_t?.self, capacity: 1) { rebound in
+                proc_pid_rusage(pid, RUSAGE_INFO_V4, rebound)
+            }
+        }
+        if status == 0, info.ri_phys_footprint > 0 || info.ri_resident_size > 0 {
+            return ProcessSizes(footprint: info.ri_phys_footprint, resident: info.ri_resident_size)
+        }
+
         var taskInfo = proc_taskinfo()
         let got = proc_pidinfo(
-            Int32(pid),
+            pid,
             PROC_PIDTASKINFO,
             0,
             &taskInfo,
             Int32(MemoryLayout<proc_taskinfo>.size)
         )
-        guard got == MemoryLayout<proc_taskinfo>.size else { return nil }
-
-        let resident = taskInfo.pti_resident_size
-        let footprint: UInt64 = 0
-        guard resident > 0 || footprint > 0 else { return nil }
-
-        let path = processPath(pid: pid)
-        let name = processDisplayName(pid: pid, path: path)
-        guard !name.isEmpty else { return nil }
-
-        return ProcessMemoryUsage(
-            pid: pid,
-            name: name,
-            bundleIdentifier: bundleIdentifier(for: path),
-            appPath: appPath(for: path),
-            residentBytes: resident,
-            physicalFootprintBytes: footprint
-        )
-    }
-
-    private nonisolated static func processPath(pid: pid_t) -> String? {
-        var pathBuffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
-        guard proc_pidpath(pid, &pathBuffer, UInt32(pathBuffer.count)) > 0 else {
+        guard got == MemoryLayout<proc_taskinfo>.size, taskInfo.pti_resident_size > 0 else {
             return nil
         }
-        return String(cString: pathBuffer)
+        return ProcessSizes(footprint: 0, resident: taskInfo.pti_resident_size)
     }
 
-    private nonisolated static func processDisplayName(pid: pid_t, path: String?) -> String {
-        if let path {
-            return appName(from: path) ?? URL(fileURLWithPath: path).lastPathComponent
+    private nonisolated static func processPath(pid: pid_t, buffer: inout [CChar]) -> String? {
+        guard proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 else {
+            return nil
         }
-
-        var nameBuffer = [CChar](repeating: 0, count: Int(2 * MAXCOMLEN))
-        if proc_name(pid, &nameBuffer, UInt32(nameBuffer.count)) > 0 {
-            return String(cString: nameBuffer)
+        return buffer.withUnsafeBufferPointer { pointer in
+            let raw = UnsafeRawBufferPointer(pointer)
+            let end = raw.firstIndex(of: 0) ?? raw.endIndex
+            guard end > raw.startIndex else { return nil }
+            return String(decoding: raw[..<end], as: UTF8.self)
         }
-
-        return "pid \(pid)"
-    }
-
-    private nonisolated static func appPath(for path: String?) -> String? {
-        guard let path else { return nil }
-        let parts = path.split(separator: "/").map(String.init)
-        guard let appIndex = parts.firstIndex(where: { $0.hasSuffix(".app") }) else {
-            return path
-        }
-        return "/" + parts[0...appIndex].joined(separator: "/")
-    }
-
-    private nonisolated static func appName(from path: String) -> String? {
-        guard let appPath = appPath(for: path) else { return nil }
-        return URL(fileURLWithPath: appPath).deletingPathExtension().lastPathComponent
-    }
-
-    private nonisolated static func bundleIdentifier(for path: String?) -> String? {
-        guard let appPath = appPath(for: path) else { return nil }
-        return Bundle(url: URL(fileURLWithPath: appPath))?.bundleIdentifier
     }
 }
 

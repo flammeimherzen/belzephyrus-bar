@@ -1,10 +1,3 @@
-//
-//  Item.swift
-//  BLZPHRS
-//
-//  Created by belzephyrus on 1/26/26.
-//
-
 import Foundation
 import SwiftData
 

@@ -90,11 +90,15 @@ struct MenuBarContentView: View {
             if viewModel.isLoading && viewModel.memoryStats == nil {
                 ProgressView().scaleEffect(0.7)
             } else if let stats = viewModel.memoryStats {
-                Text("\(viewModel.formatBytes(stats.used)) used of \(viewModel.formatBytes(stats.total))")
+                Text("\(viewModel.formatMemory(stats.used)) used of \(viewModel.formatMemory(stats.total))")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .monospacedDigit()
-                Text("\(viewModel.formatBytes(stats.remaining)) available")
+                Text("\(viewModel.formatMemory(stats.remaining)) available")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                    .monospacedDigit()
+                Text(swapText(stats))
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .monospacedDigit()
@@ -114,14 +118,20 @@ struct MenuBarContentView: View {
             if viewModel.isLoading && viewModel.diskStats == nil {
                 ProgressView().scaleEffect(0.7)
             } else if let stats = viewModel.diskStats {
-                Text("\(viewModel.formatBytes(stats.used)) used of \(viewModel.formatBytes(stats.total))")
+                Text("\(viewModel.formatDisk(stats.used)) used of \(viewModel.formatDisk(stats.total))")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .monospacedDigit()
-                Text("\(viewModel.formatBytes(stats.free)) free")
+                Text("\(viewModel.formatDisk(stats.free)) free")
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .monospacedDigit()
+                if let purgeable = stats.purgeable, purgeable > 0 {
+                    Text("\(viewModel.formatDisk(purgeable)) purgeable")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .monospacedDigit()
+                }
                 progressBar(percentage: stats.usedPercentage, color: color(for: stats.severity))
                 Text("Used: \(String(format: "%.1f", stats.usedPercentage))%")
                     .font(.caption2)
@@ -170,7 +180,7 @@ struct MenuBarContentView: View {
                             }
                         }
                         Spacer(minLength: 4)
-                        Text(viewModel.formatBytes(group.totalBytes))
+                        Text(viewModel.formatMemory(group.totalBytes))
                             .fontWeight(.medium)
                             .monospacedDigit()
                             .frame(width: 82, alignment: .trailing)
@@ -229,6 +239,12 @@ struct MenuBarContentView: View {
         .frame(height: 5)
     }
 
+    private func swapText(_ stats: MemoryStats) -> String {
+        let used = viewModel.formatMemory(stats.swapUsed)
+        guard stats.swapTotal > 0 else { return "Swap \(used)" }
+        return "Swap \(used) of \(viewModel.formatMemory(stats.swapTotal))"
+    }
+
     private func color(for severity: ResourceSeverity) -> Color {
         switch severity {
         case .normal:
@@ -247,20 +263,57 @@ struct MenuBarLabelView: View {
     @ObservedObject var viewModel: MenuBarViewModel
 
     var body: some View {
-        Text(labelText)
-            .font(.system(size: 11, weight: .medium))
-            .foregroundColor(viewModel.memoryStats == nil ? .secondary : .primary)
+        HStack(spacing: 6) {
+            metric("memorychip", memoryValue)
+            if showsSwap {
+                metric("arrow.up.arrow.down", swapValue)
+            }
+            metric("internaldrive", diskValue)
+        }
+        .font(.system(size: 11, weight: .medium))
+        .foregroundColor(viewModel.memoryStats == nil ? .secondary : .primary)
+        .fixedSize(horizontal: true, vertical: true)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(helpText)
+        .help(helpText)
     }
 
-    private var labelText: String {
-        let ramText = viewModel.memoryStats.map {
-            "RAM \(viewModel.formatBytesShort($0.used))"
-        } ?? "RAM ..."
+    private var showsSwap: Bool {
+        (viewModel.memoryStats?.swapUsed ?? 0) > 0
+    }
 
-        let diskText = viewModel.diskStats.map {
-            "SSD \(viewModel.formatBytesShort($0.used))"
-        } ?? "SSD ..."
+    private var memoryValue: String {
+        viewModel.memoryStats.map { viewModel.formatMemoryCompact($0.used) } ?? "…"
+    }
 
-        return "\(ramText) • \(diskText)"
+    private var swapValue: String {
+        viewModel.memoryStats.map { viewModel.formatMemoryCompact($0.swapUsed) } ?? "…"
+    }
+
+    private var diskValue: String {
+        viewModel.diskStats.map { viewModel.formatDiskCompact($0.used) } ?? "…"
+    }
+
+    private var helpText: String {
+        let ram = viewModel.memoryStats.map {
+            "RAM \(viewModel.formatMemory($0.used))"
+        } ?? "RAM …"
+        let swap = viewModel.memoryStats.map {
+            "Swap \(viewModel.formatMemory($0.swapUsed))"
+        } ?? "Swap …"
+        let disk = viewModel.diskStats.map {
+            "SSD \(viewModel.formatDisk($0.used))"
+        } ?? "SSD …"
+        return "\(ram), \(swap), \(disk)"
+    }
+
+    private func metric(_ systemImage: String, _ value: String) -> some View {
+        HStack(spacing: 2) {
+            Image(systemName: systemImage)
+                .font(.system(size: 10, weight: .semibold))
+                .symbolRenderingMode(.monochrome)
+            Text(value)
+                .monospacedDigit()
+        }
     }
 }
