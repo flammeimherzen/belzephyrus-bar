@@ -1,6 +1,6 @@
-# BLZPHRS
+# Monitoring
 
-BLZPHRS is a macOS menu bar app for quick system monitoring.
+Monitoring is a macOS menu bar app for quick system monitoring. The built app is `Monitoring.app`. The Xcode project and target stay named `BLZPHRS`.
 
 ## Features
 

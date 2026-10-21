@@ -7,13 +7,26 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		A5CA8ECF2F26F15000F73B06 /* BLZPHRS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BLZPHRS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A5CA8ECF2F26F15000F73B06 /* Monitoring.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Monitoring.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A5CA8EE02F27000000F73B06 /* BLZPHRSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BLZPHRSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A5CA8EE92F27000100F73B06 /* Exceptions for "BLZPHRS" folder in "BLZPHRS" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = A5CA8ECE2F26F15000F73B06 /* BLZPHRS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		A5CA8ED12F26F15000F73B06 /* BLZPHRS */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A5CA8EE92F27000100F73B06 /* Exceptions for "BLZPHRS" folder in "BLZPHRS" target */,
+			);
 			path = BLZPHRS;
 			sourceTree = "<group>";
 		};
@@ -54,7 +67,7 @@
 		A5CA8ED02F26F15000F73B06 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A5CA8ECF2F26F15000F73B06 /* BLZPHRS.app */,
+				A5CA8ECF2F26F15000F73B06 /* Monitoring.app */,
 				A5CA8EE02F27000000F73B06 /* BLZPHRSTests.xctest */,
 			);
 			name = Products;
@@ -82,7 +95,7 @@
 			packageProductDependencies = (
 			);
 			productName = BLZPHRS;
-			productReference = A5CA8ECF2F26F15000F73B06 /* BLZPHRS.app */;
+			productReference = A5CA8ECF2F26F15000F73B06 /* Monitoring.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A5CA8EE22F27000000F73B06 /* BLZPHRSTests */ = {
@@ -330,7 +343,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = BLZPHRS;
+				INFOPLIST_FILE = BLZPHRS/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Monitoring;
+				INFOPLIST_KEY_CFBundleName = Monitoring;
 				INFOPLIST_KEY_LSUIElement = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -348,7 +363,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.belzephyrus.blzphrs;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = BLZPHRS;
+				PRODUCT_NAME = Monitoring;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -379,7 +395,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = BLZPHRS;
+				INFOPLIST_FILE = BLZPHRS/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Monitoring;
+				INFOPLIST_KEY_CFBundleName = Monitoring;
 				INFOPLIST_KEY_LSUIElement = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -397,7 +415,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.belzephyrus.blzphrs;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = BLZPHRS;
+				PRODUCT_NAME = Monitoring;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
@@ -435,7 +454,7 @@
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BLZPHRS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BLZPHRS";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Monitoring.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Monitoring";
 				WRAPPER_EXTENSION = xctest;
 			};
 			name = Debug;
@@ -461,7 +480,7 @@
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 6.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BLZPHRS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BLZPHRS";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Monitoring.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Monitoring";
 				WRAPPER_EXTENSION = xctest;
 			};
 			name = Release;

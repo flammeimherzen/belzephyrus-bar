@@ -35,7 +35,7 @@ enum AppTerminationError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .currentApp:
-            "BLZPHRS cannot quit itself from the process list"
+            "Monitoring cannot quit itself from the process list"
         case .notFound:
             "The app is no longer running"
         case .denied:
