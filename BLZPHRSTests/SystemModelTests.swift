@@ -151,6 +151,33 @@ final class SystemModelTests: XCTestCase {
         XCTAssertTrue(group.canTerminate)
     }
 
+    func testProcessPathStaysInsideItsAppBundle() {
+        XCTAssertTrue(
+            AppTerminationService.processIsInsideApp(
+                processPath: "/Applications/Cursor.app/Contents/MacOS/Cursor",
+                appPath: "/Applications/Cursor.app"
+            )
+        )
+        XCTAssertTrue(
+            AppTerminationService.processIsInsideApp(
+                processPath: "/Applications/Cursor.app/Contents/Frameworks/Cursor Helper (Renderer).app/Contents/MacOS/Cursor Helper (Renderer)",
+                appPath: "/Applications/Cursor.app"
+            )
+        )
+        XCTAssertFalse(
+            AppTerminationService.processIsInsideApp(
+                processPath: "/Applications/Cursor.app2/Contents/MacOS/Cursor",
+                appPath: "/Applications/Cursor.app"
+            )
+        )
+        XCTAssertFalse(
+            AppTerminationService.processIsInsideApp(
+                processPath: "/Applications/Other.app/Contents/MacOS/Other",
+                appPath: "/Applications/Cursor.app"
+            )
+        )
+    }
+
     func testSystemAppsCannotTerminate() {
         let group = AppUsageGroup(
             id: "system",

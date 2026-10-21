@@ -20,7 +20,6 @@ struct MenuBarView: Scene {
 struct MenuBarContentView: View {
     @ObservedObject var viewModel: MenuBarViewModel
     @State private var forceQuitTarget: AppUsageGroup?
-    @State private var showsForceQuitConfirmation = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
@@ -37,6 +36,11 @@ struct MenuBarContentView: View {
 
             Divider()
             topAppsSection
+
+            if let target = forceQuitTarget {
+                Divider()
+                forceQuitConfirmation(target)
+            }
 
             if let errorMessage = viewModel.errorMessage {
                 Divider()
@@ -60,7 +64,13 @@ struct MenuBarContentView: View {
                 }
 
                 Button {
-                    NSApplication.shared.terminate(nil)
+                    // MenuBarExtra swallows terminate() during the click that dismisses the panel.
+                    DispatchQueue.main.async {
+                        NSApplication.shared.terminate(nil)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            exit(0)
+                        }
+                    }
                 } label: {
                     Label("Quit", systemImage: "power")
                 }
@@ -68,18 +78,28 @@ struct MenuBarContentView: View {
         }
         .padding(8)
         .frame(width: 370)
-        .confirmationDialog(
-            "Force quit \(forceQuitTarget?.name ?? "app")?",
-            isPresented: $showsForceQuitConfirmation,
-            titleVisibility: .visible,
-            presenting: forceQuitTarget
-        ) { group in
-            Button("Force Quit", role: .destructive) {
-                viewModel.forceQuit(group)
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: { _ in
+    }
+
+    private func forceQuitConfirmation(_ target: AppUsageGroup) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Force quit \(target.name)?")
+                .font(.caption)
+                .fontWeight(.semibold)
             Text("This may cause unsaved data to be lost.")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            HStack(spacing: 8) {
+                Button("Force Quit", role: .destructive) {
+                    let target = target
+                    forceQuitTarget = nil
+                    DispatchQueue.main.async {
+                        viewModel.forceQuit(target)
+                    }
+                }
+                Button("Cancel") {
+                    forceQuitTarget = nil
+                }
+            }
         }
     }
 
@@ -154,21 +174,7 @@ struct MenuBarContentView: View {
                     .foregroundColor(.secondary)
             } else {
                 ForEach(Array(terminableGroups.prefix(5))) { group in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Menu {
-                            Button("Quit") {
-                                viewModel.quit(group)
-                            }
-                            Button("Force Quit", role: .destructive) {
-                                forceQuitTarget = group
-                                showsForceQuitConfirmation = true
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
-                        }
-                        .menuStyle(.borderlessButton)
-                        .frame(width: 16)
-
+                    HStack(alignment: .center, spacing: 6) {
                         VStack(alignment: .leading, spacing: 1) {
                             Text(group.name)
                                 .lineLimit(1)
@@ -183,8 +189,22 @@ struct MenuBarContentView: View {
                         Text(viewModel.formatMemory(group.totalBytes))
                             .fontWeight(.medium)
                             .monospacedDigit()
-                            .frame(width: 82, alignment: .trailing)
+                            .frame(width: 72, alignment: .trailing)
                             .layoutPriority(1)
+                        Button("Quit") {
+                            let group = group
+                            if forceQuitTarget?.id == group.id {
+                                forceQuitTarget = nil
+                            }
+                            DispatchQueue.main.async {
+                                viewModel.quit(group)
+                            }
+                        }
+                        .controlSize(.small)
+                        Button("Force") {
+                            forceQuitTarget = group
+                        }
+                        .controlSize(.small)
                     }
                     .font(.caption)
                 }

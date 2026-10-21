@@ -84,22 +84,14 @@ final class MenuBarViewModel: ObservableObject {
         lastMetricRefresh = Date()
     }
 
-    func quit(_ group: AppUsageGroup) {
-        guard let pid = group.primaryPID else { return }
-        do {
-            try terminationService.quit(pid: pid)
-        } catch {
-            setErrorMessage(error.localizedDescription)
-        }
+    @discardableResult
+    func quit(_ group: AppUsageGroup) -> Bool {
+        performTermination { try terminationService.quit(group) }
     }
 
-    func forceQuit(_ group: AppUsageGroup) {
-        guard let pid = group.primaryPID else { return }
-        do {
-            try terminationService.forceQuit(pid: pid)
-        } catch {
-            setErrorMessage(error.localizedDescription)
-        }
+    @discardableResult
+    func forceQuit(_ group: AppUsageGroup) -> Bool {
+        performTermination { try terminationService.forceQuit(group) }
     }
 
     func openActivityMonitor() {
@@ -274,7 +266,23 @@ final class MenuBarViewModel: ObservableObject {
         return Array(actions.prefix(3))
     }
 
-    private func setErrorMessage(_ message: String) {
+    private func performTermination(_ action: () throws -> Void) -> Bool {
+        do {
+            try action()
+            setErrorMessage(nil)
+            refreshAll()
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(1200))
+                self.refreshAll()
+            }
+            return true
+        } catch {
+            setErrorMessage(error.localizedDescription)
+            return false
+        }
+    }
+
+    private func setErrorMessage(_ message: String?) {
         guard snapshot.errorMessage != message else { return }
         var next = snapshot
         next.errorMessage = message
