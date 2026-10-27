@@ -10,5 +10,10 @@
 	<true/>
 	<key>LSUIElement</key>
 	<true/>
+	<key>SMPrivilegedExecutables</key>
+	<dict>
+		<key>com.belzephyrus.blzphrs.helper</key>
+		<string>identifier "com.belzephyrus.blzphrs.helper" and anchor apple generic and certificate leaf[subject.OU] = "TQA73XJF6K"</string>
+	</dict>
 </dict>
 </plist>

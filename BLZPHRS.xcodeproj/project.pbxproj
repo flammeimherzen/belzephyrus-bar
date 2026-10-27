@@ -9,7 +9,17 @@
 /* Begin PBXFileReference section */
 		A5CA8ECF2F26F15000F73B06 /* Monitoring.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Monitoring.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A5CA8EE02F27000000F73B06 /* BLZPHRSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BLZPHRSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1A000022F27000100F73B06 /* MonitoringHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = com.belzephyrus.blzphrs.helper; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1A000192F27000100F73B06 /* com.belzephyrus.blzphrs.helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = com.belzephyrus.blzphrs.helper.plist; path = Packaging/com.belzephyrus.blzphrs.helper.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXBuildFile section */
+		B1A000132F27000100F73B06 /* MonitoringKit in Frameworks */ = {isa = PBXBuildFile; productRef = B1A000102F27000100F73B06 /* MonitoringKit */; };
+		B1A000142F27000100F73B06 /* MonitoringKit in Frameworks */ = {isa = PBXBuildFile; productRef = B1A000112F27000100F73B06 /* MonitoringKit */; };
+		B1A000152F27000100F73B06 /* MonitoringKit in Frameworks */ = {isa = PBXBuildFile; productRef = B1A000122F27000100F73B06 /* MonitoringKit */; };
+		B1A000182F27000100F73B06 /* MonitoringHelper in Embed Helper */ = {isa = PBXBuildFile; fileRef = B1A000022F27000100F73B06 /* MonitoringHelper */; };
+		B1A0001A2F27000100F73B06 /* com.belzephyrus.blzphrs.helper.plist in Embed Launch Agent */ = {isa = PBXBuildFile; fileRef = B1A000192F27000100F73B06 /* com.belzephyrus.blzphrs.helper.plist */; };
+/* End PBXBuildFile section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		A5CA8EE92F27000100F73B06 /* Exceptions for "BLZPHRS" folder in "BLZPHRS" target */ = {
@@ -35,6 +45,11 @@
 			path = BLZPHRSTests;
 			sourceTree = "<group>";
 		};
+		B1A000082F27000100F73B06 /* MonitoringHelper */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MonitoringHelper;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1A000132F27000100F73B06 /* MonitoringKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -49,10 +65,44 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1A000152F27000100F73B06 /* MonitoringKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A000042F27000100F73B06 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1A000142F27000100F73B06 /* MonitoringKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B1A000162F27000100F73B06 /* Embed Helper */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchServices;
+			dstSubfolderSpec = 1;
+			files = (
+				B1A000182F27000100F73B06 /* MonitoringHelper in Embed Helper */,
+			);
+			name = "Embed Helper";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A000172F27000100F73B06 /* Embed Launch Daemon */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Contents/Library/LaunchDaemons;
+			dstSubfolderSpec = 1;
+			files = (
+				B1A0001A2F27000100F73B06 /* com.belzephyrus.blzphrs.helper.plist in Embed Launch Agent */,
+			);
+			name = "Embed Launch Daemon";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXGroup section */
 		A5CA8EC62F26F15000F73B06 = {
@@ -60,6 +110,8 @@
 			children = (
 				A5CA8ED12F26F15000F73B06 /* BLZPHRS */,
 				A5CA8EE12F27000000F73B06 /* BLZPHRSTests */,
+				B1A000082F27000100F73B06 /* MonitoringHelper */,
+				B1A000192F27000100F73B06 /* com.belzephyrus.blzphrs.helper.plist */,
 				A5CA8ED02F26F15000F73B06 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -69,6 +121,7 @@
 			children = (
 				A5CA8ECF2F26F15000F73B06 /* Monitoring.app */,
 				A5CA8EE02F27000000F73B06 /* BLZPHRSTests.xctest */,
+				B1A000022F27000100F73B06 /* MonitoringHelper */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -83,16 +136,20 @@
 				A5CA8ECB2F26F15000F73B06 /* Sources */,
 				A5CA8ECC2F26F15000F73B06 /* Frameworks */,
 				A5CA8ECD2F26F15000F73B06 /* Resources */,
+				B1A000162F27000100F73B06 /* Embed Helper */,
+				B1A000172F27000100F73B06 /* Embed Launch Daemon */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				B1A0001B2F27000100F73B06 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				A5CA8ED12F26F15000F73B06 /* BLZPHRS */,
 			);
 			name = BLZPHRS;
 			packageProductDependencies = (
+				B1A000102F27000100F73B06 /* MonitoringKit */,
 			);
 			productName = BLZPHRS;
 			productReference = A5CA8ECF2F26F15000F73B06 /* Monitoring.app */;
@@ -116,10 +173,33 @@
 			);
 			name = BLZPHRSTests;
 			packageProductDependencies = (
+				B1A000122F27000100F73B06 /* MonitoringKit */,
 			);
 			productName = BLZPHRSTests;
 			productReference = A5CA8EE02F27000000F73B06 /* BLZPHRSTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B1A000012F27000100F73B06 /* MonitoringHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1A000052F27000100F73B06 /* Build configuration list for PBXNativeTarget "MonitoringHelper" */;
+			buildPhases = (
+				B1A000032F27000100F73B06 /* Sources */,
+				B1A000042F27000100F73B06 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B1A000082F27000100F73B06 /* MonitoringHelper */,
+			);
+			name = MonitoringHelper;
+			packageProductDependencies = (
+				B1A000112F27000100F73B06 /* MonitoringKit */,
+			);
+			productName = MonitoringHelper;
+			productReference = B1A000022F27000100F73B06 /* MonitoringHelper */;
+			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
@@ -130,6 +210,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = A5CA8ECE2F26F15000F73B06;
 			remoteInfo = BLZPHRS;
+		};
+		B1A0001C2F27000100F73B06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A5CA8EC72F26F15000F73B06 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1A000012F27000100F73B06;
+			remoteInfo = MonitoringHelper;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -159,6 +246,9 @@
 			);
 			mainGroup = A5CA8EC62F26F15000F73B06;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B1A000092F27000100F73B06 /* XCLocalSwiftPackageReference "MonitoringKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A5CA8ED02F26F15000F73B06 /* Products */;
 			projectDirPath = "";
@@ -166,6 +256,7 @@
 			targets = (
 				A5CA8ECE2F26F15000F73B06 /* BLZPHRS */,
 				A5CA8EE22F27000000F73B06 /* BLZPHRSTests */,
+				B1A000012F27000100F73B06 /* MonitoringHelper */,
 			);
 		};
 /* End PBXProject section */
@@ -202,6 +293,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B1A000032F27000100F73B06 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -209,6 +307,11 @@
 			isa = PBXTargetDependency;
 			target = A5CA8ECE2F26F15000F73B06 /* BLZPHRS */;
 			targetProxy = A5CA8EE92F27000000F73B06 /* PBXContainerItemProxy */;
+		};
+		B1A0001B2F27000100F73B06 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B1A000012F27000100F73B06 /* MonitoringHelper */;
+			targetProxy = B1A0001C2F27000100F73B06 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -336,7 +439,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = TQA73XJF6K;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -361,7 +464,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.belzephyrus.blzphrs;
 				PRODUCT_MODULE_NAME = BLZPHRS;
 				PRODUCT_NAME = Monitoring;
@@ -372,7 +475,7 @@
 				SUPPORTED_PLATFORMS = macosx;
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "BLZPHRS/BLZPHRS-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -388,7 +491,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = TQA73XJF6K;
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -413,7 +516,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.belzephyrus.blzphrs;
 				PRODUCT_MODULE_NAME = BLZPHRS;
 				PRODUCT_NAME = Monitoring;
@@ -424,7 +527,7 @@
 				SUPPORTED_PLATFORMS = macosx;
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
-				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OBJC_BRIDGING_HEADER = "BLZPHRS/BLZPHRS-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -447,7 +550,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.belzephyrus.blzphrs.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -458,6 +561,52 @@
 				WRAPPER_EXTENSION = xctest;
 			};
 			name = Debug;
+		};
+		B1A000062F27000100F73B06 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = TQA73XJF6K;
+				ENABLE_APP_SANDBOX = NO;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MonitoringHelper/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.belzephyrus.blzphrs.helper;
+				PRODUCT_NAME = com.belzephyrus.blzphrs.helper;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		B1A000072F27000100F73B06 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = TQA73XJF6K;
+				ENABLE_APP_SANDBOX = NO;
+				CREATE_INFOPLIST_SECTION_IN_BINARY = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MonitoringHelper/Info.plist;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.belzephyrus.blzphrs.helper;
+				PRODUCT_NAME = com.belzephyrus.blzphrs.helper;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = nonisolated;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
 		};
 		A5CA8EE82F27000000F73B06 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -473,7 +622,7 @@
 					"@loader_path/Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.belzephyrus.blzphrs.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -515,7 +664,41 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		B1A000052F27000100F73B06 /* Build configuration list for PBXNativeTarget "MonitoringHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1A000062F27000100F73B06 /* Debug */,
+				B1A000072F27000100F73B06 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		B1A000092F27000100F73B06 /* XCLocalSwiftPackageReference "MonitoringKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = MonitoringKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B1A000102F27000100F73B06 /* MonitoringKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B1A000092F27000100F73B06 /* XCLocalSwiftPackageReference "MonitoringKit" */;
+			productName = MonitoringKit;
+		};
+		B1A000112F27000100F73B06 /* MonitoringKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B1A000092F27000100F73B06 /* XCLocalSwiftPackageReference "MonitoringKit" */;
+			productName = MonitoringKit;
+		};
+		B1A000122F27000100F73B06 /* MonitoringKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B1A000092F27000100F73B06 /* XCLocalSwiftPackageReference "MonitoringKit" */;
+			productName = MonitoringKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A5CA8EC72F26F15000F73B06 /* Project object */;
 }

@@ -47,6 +47,9 @@ nonisolated struct MemoryStats: Sendable, Equatable {
     let compressed: Int64
     let swapUsed: Int64
     let swapTotal: Int64
+    var swapAvailable = true
+    var swapInPerSecond: Double?
+    var swapOutPerSecond: Double?
 
     nonisolated var remaining: Int64 {
         max(total - used, 0)

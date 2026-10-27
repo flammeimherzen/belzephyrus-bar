@@ -8,8 +8,11 @@
 import Foundation
 import Darwin
 import os
+import MonitoringKit
 
 final class SystemInfoService: @unchecked Sendable {
+    private var swapInRate = CounterRate()
+    private var swapOutRate = CounterRate()
     private struct AppMetadata: Sendable {
         let name: String
         let bundleIdentifier: String?
@@ -82,6 +85,7 @@ final class SystemInfoService: @unchecked Sendable {
         )
 
         let swap = Self.swapUsage()
+        let now = SampleClock.now
         return MemoryStats(
             total: totalMemory,
             used: usedMemory,
@@ -90,8 +94,11 @@ final class SystemInfoService: @unchecked Sendable {
             inactive: inactiveMemory,
             wired: wiredMemory,
             compressed: compressedMemory,
-            swapUsed: swap.used,
-            swapTotal: swap.total
+            swapUsed: swap?.used ?? 0,
+            swapTotal: swap?.total ?? 0,
+            swapAvailable: swap != nil,
+            swapInPerSecond: swapInRate.sample(UInt64(stats.swapins) * UInt64(pageSize), at: now),
+            swapOutPerSecond: swapOutRate.sample(UInt64(stats.swapouts) * UInt64(pageSize), at: now)
         )
     }
 
@@ -117,11 +124,11 @@ final class SystemInfoService: @unchecked Sendable {
         return Int64(pages) * pageSize
     }
 
-    private nonisolated static func swapUsage() -> (used: Int64, total: Int64) {
+    private nonisolated static func swapUsage() -> (used: Int64, total: Int64)? {
         var usage = xsw_usage()
         var size = MemoryLayout<xsw_usage>.size
         guard sysctlbyname("vm.swapusage", &usage, &size, nil, 0) == 0 else {
-            return (0, 0)
+            return nil
         }
         return (
             used: Int64(clamping: usage.xsu_used),
